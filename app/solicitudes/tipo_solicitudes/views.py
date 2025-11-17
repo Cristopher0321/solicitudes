@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 import csv
 import io
+import json
 from django.http import HttpResponse
 from django.db.models import Count
 from django.shortcuts import render, redirect
@@ -15,7 +16,7 @@ import matplotlib
 matplotlib.use('Agg')  # Backend sin GUI
 import matplotlib.pyplot as plt
 from .forms import FormTipoSolicitud
-from .models import Solicitud, TipoSolicitud
+from .models import ESTATUS, RESPOSABLES, Solicitud, TipoSolicitud
 from .funcionalidad import FuncionesAvanzadas
 
 def bienvenida(request):
@@ -293,3 +294,95 @@ def generar_csv_graficas(request):
         ])
 
     return response
+
+
+def metricas(request):
+    """Panel administrativo inicial con métricas básicas.
+
+    Calcula totales, agrupaciones y promedio de resolución usando registros de Seguimiento
+    vinculados por convención en `observaciones` que contienen 'folio:<folio>'.
+    """
+    # Total de tickets
+    total_tickets = Solicitud.objects.count()
+
+    # Solicitudes por tipo (nombre)
+    solicitudes_por_tipo = (
+        Solicitud.objects
+        .values('tipo_solicitud__nombre')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+
+    # Solicitudes por responsable (usa el campo responsable del TipoSolicitud)
+    solicitudes_por_responsable = (
+        Solicitud.objects
+        .values('tipo_solicitud__responsable')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+
+    # Mapear códigos de responsable a etiquetas legibles
+    responsable_map = dict(RESPOSABLES)
+    responsable_series = [
+        {
+            'responsable': responsable_map.get(item['tipo_solicitud__responsable'], item['tipo_solicitud__responsable']),
+            'count': item['count']
+        }
+        for item in solicitudes_por_responsable
+    ]
+
+    tipo_list = list(solicitudes_por_tipo)
+    # preparar series JSON para gráficos (labels y datos)
+    labels = [t['tipo_solicitud__nombre'] for t in tipo_list]
+    data_vals = [t['count'] for t in tipo_list]
+
+    context = {
+        'total_tickets': total_tickets,
+        'solicitudes_por_tipo': tipo_list,
+        'solicitudes_por_responsable': responsable_series,
+        # placeholder: promedio de resolución (modelos no modificados)
+        'promedio_resolucion': None,
+        'labels_json': json.dumps(labels),
+        'data_json': json.dumps(data_vals),
+    }
+
+    # --- Compute resolution times and status counts (non-invasive)
+    total_minutes = 0
+    resolved_count = 0
+    status_counts = {code: 0 for code, _ in ESTATUS}
+
+    all_solicitudes = Solicitud.objects.all()
+    for s in all_solicitudes:
+        folio = s.folio
+        seg = SeguimientoSolicitud.objects.filter(observaciones__icontains=f'folio:{folio}').order_by('-fecha_creacion').first()
+        if seg:
+            status_counts[seg.estatus] = status_counts.get(seg.estatus, 0) + 1
+            if seg.estatus == '3':
+                delta = seg.fecha_creacion - s.fecha_creacion
+                minutes = int(delta.total_seconds() / 60)
+                total_minutes += minutes
+                resolved_count += 1
+        else:
+            status_counts['1'] = status_counts.get('1', 0) + 1
+
+    promedio = None
+    if resolved_count > 0:
+        avg_minutes = total_minutes / resolved_count
+        hours = int(avg_minutes // 60)
+        minutes = int(avg_minutes % 60)
+        promedio = f"{hours}:{minutes:02d}:00"
+
+    # Map status codes to labels for the template
+    status_map = dict(ESTATUS)
+    status_series = [{
+        'code': code,
+        'label': status_map.get(code, code),
+        'count': status_counts.get(code, 0)
+    } for code, _ in ESTATUS]
+
+    context.update({
+        'promedio_resolucion': promedio,
+        'status_series': status_series,
+    })
+
+    return render(request, 'metricas.html', context)
