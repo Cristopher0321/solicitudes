@@ -45,8 +45,6 @@ def agregar(request):
 
     return render(request, 'agregar_solicitud.html', {'form': form})
 
-
-
 def obtener_solicitudes(request):
     solicitudes = Solicitud.objects.all()
     tipos_solicitudes = TipoSolicitud.objects.all()
