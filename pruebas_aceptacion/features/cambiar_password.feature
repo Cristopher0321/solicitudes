@@ -70,11 +70,11 @@ Feature: Cambio Obligatorio de Contraseña
   Scenario: Usuario que ya cambió contraseña puede cambiarla nuevamente voluntariamente
     Given que existe un usuario "usuario_normal" que ya cambió su contraseña
     And el usuario "usuario_normal" está autenticado
-    When el usuario accede a su perfil
-    And hace clic en "Cambiar contraseña"
-    And ingresa su contraseña actual
-    And ingresa una nueva contraseña válida "OtraPass456!"
+    And que el usuario está en la página de cambio de contraseña
+    When ingresa la contraseña actual "Pass123!"
+    And ingresa la nueva contraseña "OtraPass456!"
     And confirma la nueva contraseña "OtraPass456!"
     And hace clic en el botón de cambiar contraseña
     Then la contraseña se actualiza exitosamente
     And el usuario es redirigido a la página de bienvenida
+

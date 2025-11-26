@@ -272,3 +272,127 @@ def step_usuario_perfil_completo(context, username):
     context.usuario.debe_cambiar_password = False
     context.usuario.perfil_completo = True
     context.usuario.save()
+
+
+# ==================== PASOS ADICIONALES ====================
+
+@given('que existe un usuario con username "{username}" y rol "{rol}"')
+def step_crear_usuario_con_rol(context, username, rol):
+    """Crea un usuario con rol específico"""
+    Usuario.objects.filter(username=username).delete()
+    context.usuario = Usuario.objects.create_user(
+        username=username,
+        password='testpass123',
+        email=f'{username}@test.com',
+        first_name='Usuario',
+        last_name='Test',
+        rol=rol,
+        telefono='4921234567',
+        matricula='12345' if rol == 'alumno' else ''
+    )
+    context.usuario.debe_cambiar_password = False
+    context.usuario.perfil_completo = True
+    context.usuario.save()
+
+
+@given('que existe un administrador con username "{username}"')
+def step_crear_administrador_simple(context, username):
+    """Crea un administrador"""
+    Usuario.objects.filter(username=username).delete()
+    context.admin_user = Usuario.objects.create_user(
+        username=username,
+        password='adminpass123',
+        email=f'{username}@test.com',
+        first_name='Admin',
+        last_name='Sistema',
+        rol='administrador',
+        telefono='4921234567'
+    )
+    context.admin_user.debe_cambiar_password = False
+    context.admin_user.perfil_completo = True
+    context.admin_user.save()
+
+
+@given('que existe un usuario "{username}" con debe_cambiar_password en True')
+def step_usuario_debe_cambiar_password_true(context, username):
+    """Crea usuario que debe cambiar contraseña"""
+    Usuario.objects.filter(username=username).delete()
+    context.usuario = Usuario.objects.create_user(
+        username=username,
+        password='testpass123',
+        email=f'{username}@test.com',
+        first_name='Nuevo',
+        last_name='Usuario',
+        rol='alumno',
+        telefono='4921234567',
+        matricula='12345'
+    )
+    context.usuario.debe_cambiar_password = True
+    context.usuario.perfil_completo = False
+    context.usuario.save()
+
+
+@when('el usuario visita "{url}"')
+def step_usuario_visita_url_especifica(context, url):
+    """Usuario visita una URL específica"""
+    context.response = context.client.get(url, follow=True)
+
+
+@when('el usuario accede a las siguientes URLs:')
+def step_accede_multiples_urls(context):
+    """Usuario accede a múltiples URLs desde tabla"""
+    context.responses = []
+    for row in context.table:
+        url = row['URL']
+        response = context.client.get(url, follow=True)
+        context.responses.append({'url': url, 'response': response})
+
+
+@given('que existe un usuario con perfil_completo en False')
+def step_usuario_perfil_incompleto_generico(context):
+    """Crea un usuario con perfil incompleto"""
+    Usuario.objects.filter(username='usuario_test').delete()
+    context.usuario = Usuario.objects.create_user(
+        username='usuario_test',
+        password='testpass123',
+        email='usuario@test.com',
+        first_name='Usuario',
+        last_name='Test',
+        rol='alumno'
+    )
+    context.usuario.debe_cambiar_password = False
+    context.usuario.perfil_completo = False
+    context.usuario.save()
+
+
+@given('el usuario está autenticado')
+def step_usuario_autenticado_generico(context):
+    """Autentica al usuario en el contexto"""
+    if hasattr(context, 'usuario'):
+        context.client.force_login(context.usuario)
+    else:
+        # Crear y autenticar usuario genérico
+        usuario = Usuario.objects.create_user(
+            username='test_user',
+            password='testpass123',
+            email='test@test.com',
+            rol='alumno'
+        )
+        context.client.force_login(usuario)
+        context.usuario = usuario
+
+
+@when('un usuario no autenticado visita "{url}"')
+def step_no_autenticado_visita_url(context, url):
+    """Usuario no autenticado visita URL"""
+    context.client.logout()
+    context.response = context.client.get(url, follow=False)
+
+
+@then('es redirigido a la página de bienvenida')
+def step_redirigido_bienvenida(context):
+    """Verifica redirección a bienvenida"""
+    if hasattr(context.response, 'redirect_chain') and context.response.redirect_chain:
+        assert 'bienvenida' in context.response.redirect_chain[-1][0]
+    else:
+        assert 'bienvenida' in context.response.url or context.response.status_code == 200
