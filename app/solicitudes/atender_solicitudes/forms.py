@@ -19,14 +19,15 @@ class CerrarSolicitudForm(forms.Form):
         required=True,
         widget=forms.Textarea,
         error_messages={
-            'required': 'Las observaciones son obligatorias.'
+            'required': 'Las observaciones son obligatorias al cerrar la solicitud.'
         }
     )
 
     def clean_estatus(self):
         value = (self.cleaned_data.get('estatus') or '').strip()
         if value not in ('3', '4'):
-            raise forms.ValidationError('Estatus inválido. Use 3 (Terminada) o 4 (Cancelada).')
+            raise forms.ValidationError(
+                'Estatus inválido. Use 3 (Terminada) o 4 (Cancelada).')
         return value
 
     def clean_observaciones(self):
