@@ -183,12 +183,54 @@ class SolicitudTestDataFactory:
         self._folio_counter += 1
         return f'SOL-{unique_id}-{self._folio_counter:04d}'
 
+    def _get_pdf_content(self):
+        """Retorna contenido binario de un PDF mínimo válido."""
+        return (
+            b'%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n'
+            b'2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n'
+            b'3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/Resources <<\n'
+            b'/Font <<\n/F1 <<\n/Type /Font\n/Subtype /Type1\n'
+            b'/BaseFont /Helvetica\n>>\n>>\n>>\n/MediaBox [0 0 612 792]\n'
+            b'/Contents 4 0 R\n>>\nendobj\n4 0 obj\n<<\n/Length 44\n>>\nstream\n'
+            b'BT\n/F1 12 Tf\n100 700 Td\n(Documento de prueba) Tj\nET\n'
+            b'endstream\nendobj\nxref\n0 5\n0000000000 65535 f\n'
+            b'0000000009 00000 n\n0000000058 00000 n\n0000000115 00000 n\n'
+            b'0000000314 00000 n\ntrailer\n<<\n/Size 5\n/Root 1 0 R\n>>\n'
+            b'startxref\n408\n%%EOF'
+        )
+
+    def _get_jpg_content(self):
+        """Retorna contenido binario de un JPG mínimo válido."""
+        return (
+            b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01'
+            b'\x00\x00\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07'
+            b'\x07\t\t\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14'
+            b'\x1d\x1a\x1f\x1e\x1d\x1a\x1c\x1c $.\' ",#\x1c\x1c(7),01444'
+            b'\x1f\'9=82<.342\xff\xc0\x00\x0b\x08\x00\x01\x00\x01\x01\x01'
+            b'\x11\x00\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01'
+            b'\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06'
+            b'\x07\x08\t\n\x0b\xff\xc4\x00\xb5\x10\x00\x02\x01\x03\x03\x02'
+            b'\x04\x03\x05\x05\x04\x04\x00\x00\x01}\x01\x02\x03\x00\x04\x11'
+            b'\x05\x12!1A\x06\x13Qa\x07"q\x142\x81\x91\xa1\x08#B\xb1\xc1'
+            b'\x15R\xd1\xf0$3br\x82\t\n\x16\x17\x18\x19\x1a'
+            b'%&\'()*456789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz'
+            b'\x83\x84\x85\x86\x87\x88\x89\x8a\x92\x93\x94\x95\x96\x97\x98'
+            b'\x99\x9a\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xb2\xb3\xb4\xb5'
+            b'\xb6\xb7\xb8\xb9\xba\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xd2'
+            b'\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xe1\xe2\xe3\xe4\xe5\xe6\xe7'
+            b'\xe8\xe9\xea\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xff\xda'
+            b'\x00\x08\x01\x01\x00\x00?\x00\xff\xd9'
+        )
+
     def crear_archivo_prueba(self, nombre_archivo, tipo_archivo='txt'):
         """Crea un archivo de prueba con contenido."""
         contenidos = {
-            'txt': 'Este es un archivo de prueba generado automáticamente.\nContenido de ejemplo para testing.\n',
-            'pdf': b'%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/Resources <<\n/Font <<\n/F1 <<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica\n>>\n>>\n>>\n/MediaBox [0 0 612 792]\n/Contents 4 0 R\n>>\nendobj\n4 0 obj\n<<\n/Length 44\n>>\nstream\nBT\n/F1 12 Tf\n100 700 Td\n(Documento de prueba) Tj\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f\n0000000009 00000 n\n0000000058 00000 n\n0000000115 00000 n\n0000000314 00000 n\ntrailer\n<<\n/Size 5\n/Root 1 0 R\n>>\nstartxref\n408\n%%EOF',
-            'jpg': b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a\x1f\x1e\x1d\x1a\x1c\x1c $.\' ",#\x1c\x1c(7),01444\x1f\'9=82<.342\xff\xc0\x00\x0b\x08\x00\x01\x00\x01\x01\x01\x11\x00\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\xff\xc4\x00\xb5\x10\x00\x02\x01\x03\x03\x02\x04\x03\x05\x05\x04\x04\x00\x00\x01}\x01\x02\x03\x00\x04\x11\x05\x12!1A\x06\x13Qa\x07"q\x142\x81\x91\xa1\x08#B\xb1\xc1\x15R\xd1\xf0$3br\x82\t\n\x16\x17\x18\x19\x1a%&\'()*456789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz\x83\x84\x85\x86\x87\x88\x89\x8a\x92\x93\x94\x95\x96\x97\x98\x99\x9a\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xff\xda\x00\x08\x01\x01\x00\x00?\x00\xff\xd9',
+            'txt': (
+                'Este es un archivo de prueba generado automáticamente.\n'
+                'Contenido de ejemplo para testing.\n'
+            ),
+            'pdf': self._get_pdf_content(),
+            'jpg': self._get_jpg_content(),
         }
 
         if tipo_archivo in contenidos:
@@ -203,14 +245,9 @@ class SolicitudTestDataFactory:
         from django.core.files.base import ContentFile
         return ContentFile(contenido, name=nombre_archivo)
 
-    def crear_solicitudes(self, cantidad=15):
-        """Crea solicitudes de ejemplo con respuestas."""
-        if not self.usuarios:
-            self.crear_usuarios()
-        if not self.tipos_solicitud:
-            self.crear_tipos_solicitud()
-
-        respuestas_ejemplo = {
+    def _get_respuestas_ejemplo(self):
+        """Retorna diccionario con respuestas de ejemplo por tipo de solicitud."""
+        return {
             'Constancia de Estudios': {
                 'motivo': [
                     'Necesito la constancia para trámite de beca',
@@ -219,10 +256,15 @@ class SolicitudTestDataFactory:
                     'Para participar en concurso académico',
                 ],
                 'semestre': ['3', '5', '7', '4', '6'],
-                'fecha_necesaria': lambda: (timezone.now() + timedelta(days=random.randint(7, 30))).strftime('%Y-%m-%d'),
+                'fecha_necesaria': lambda: (
+                    timezone.now() + timedelta(days=random.randint(7, 30))
+                ).strftime('%Y-%m-%d'),
             },
             'Cambio de Grupo': {
-                'materia': ['Programación Web', 'Base de Datos', 'Cálculo Diferencial', 'Inglés IV'],
+                'materia': [
+                    'Programación Web', 'Base de Datos',
+                    'Cálculo Diferencial', 'Inglés IV'
+                ],
                 'grupo_actual': ['A', 'B', 'C'],
                 'grupo_deseado': ['B', 'A', 'C'],
                 'justificacion': [
@@ -240,7 +282,11 @@ class SolicitudTestDataFactory:
                     'Reacciones químicas',
                 ],
                 'tipo_asesoria': ['Individual', 'Grupal', 'En línea'],
-                'disponibilidad': ['Lunes y miércoles por la tarde', 'Martes y jueves por la mañana', 'Viernes todo el día'],
+                'disponibilidad': [
+                    'Lunes y miércoles por la tarde',
+                    'Martes y jueves por la mañana',
+                    'Viernes todo el día'
+                ],
             },
             'Baja de Materia': {
                 'materia': ['Estadística', 'Programación Avanzada', 'Electrónica'],
@@ -253,8 +299,13 @@ class SolicitudTestDataFactory:
             },
             'Carta de Recomendación': {
                 'proposito': ['Beca', 'Empleo', 'Maestría', 'Intercambio'],
-                'destinatario': ['Comité de becas', 'Departamento de Recursos Humanos', 'Universidad Nacional', 'Comité de selección'],
-                'fecha_entrega': lambda: (timezone.now() + timedelta(days=random.randint(10, 45))).strftime('%Y-%m-%d'),
+                'destinatario': [
+                    'Comité de becas', 'Departamento de Recursos Humanos',
+                    'Universidad Nacional', 'Comité de selección'
+                ],
+                'fecha_entrega': lambda: (
+                    timezone.now() + timedelta(days=random.randint(10, 45))
+                ).strftime('%Y-%m-%d'),
                 'informacion_adicional': [
                     'He participado en proyectos de investigación',
                     'Tengo promedio de 9.5',
@@ -264,13 +315,90 @@ class SolicitudTestDataFactory:
             },
         }
 
-        estados = ['1', '2', '3']  # Creada, En proceso, Terminada
+    def _crear_respuesta_campo(self, solicitud, campo, respuestas_tipo):
+        """Crea una respuesta para un campo de texto."""
+        valor = ''
+        if campo.nombre in respuestas_tipo:
+            opciones = respuestas_tipo[campo.nombre]
+            valor = opciones() if callable(opciones) else random.choice(opciones)
 
-        for i in range(cantidad):
+        RespuestaCampo.objects.create(
+            solicitud=solicitud,
+            campo=campo,
+            valor=valor
+        )
+
+    def _crear_archivos_adjuntos(self, solicitud, campo):
+        """Crea archivos adjuntos para un campo de tipo file."""
+        respuesta_campo = RespuestaCampo.objects.create(
+            solicitud=solicitud,
+            campo=campo,
+            valor=''
+        )
+
+        cantidad_archivos = random.randint(1, min(campo.cantidad_archivos, 3))
+        tipos_archivo = ['pdf', 'txt', 'jpg']
+
+        for j in range(cantidad_archivos):
+            tipo_elegido = random.choice(tipos_archivo)
+            nombre_archivo = f'{campo.nombre}_{j+1}.{tipo_elegido}'
+
+            archivo_content = self.crear_archivo_prueba(
+                nombre_archivo, tipo_elegido)
+
+            archivo_adjunto = ArchivoAdjunto.objects.create(
+                solicitud=solicitud,
+                respuesta=respuesta_campo,
+                nombre=nombre_archivo
+            )
+            archivo_adjunto.archivo.save(
+                nombre_archivo, archivo_content, save=True)
+
+    def _crear_seguimientos(self, solicitud):
+        """Crea seguimientos para una solicitud."""
+        SeguimientoSolicitud.objects.create(
+            solicitud=solicitud,
+            estatus='1',
+            observaciones='Solicitud creada por el usuario'
+        )
+
+        if random.random() > 0.5:
+            SeguimientoSolicitud.objects.create(
+                solicitud=solicitud,
+                estatus='2',
+                observaciones=random.choice([
+                    'La solicitud está siendo revisada',
+                    'Se requiere documentación adicional',
+                    'En espera de aprobación del coordinador',
+                    'Procesando la solicitud',
+                ])
+            )
+
+            if random.random() > 0.6:
+                SeguimientoSolicitud.objects.create(
+                    solicitud=solicitud,
+                    estatus='3',
+                    observaciones=random.choice([
+                        'Solicitud aprobada y procesada',
+                        'Documento entregado al solicitante',
+                        'Trámite completado exitosamente',
+                        'Solicitud finalizada',
+                    ])
+                )
+
+    def crear_solicitudes(self, cantidad=15):
+        """Crea solicitudes de ejemplo con respuestas."""
+        if not self.usuarios:
+            self.crear_usuarios()
+        if not self.tipos_solicitud:
+            self.crear_tipos_solicitud()
+
+        respuestas_ejemplo = self._get_respuestas_ejemplo()
+
+        for _ in range(cantidad):
             usuario = random.choice(self.usuarios)
             tipo = random.choice(self.tipos_solicitud)
 
-            # Crear solicitud
             solicitud = Solicitud.objects.create(
                 usuario=usuario,
                 tipo_solicitud=tipo,
@@ -278,90 +406,16 @@ class SolicitudTestDataFactory:
             )
             self.solicitudes.append(solicitud)
 
-            # Crear respuestas para los campos del formulario
-            formulario = tipo.formulario
-            campos = formulario.campos.all()
-
             respuestas_tipo = respuestas_ejemplo.get(tipo.nombre, {})
 
-            for campo in campos:
-                if campo.tipo != 'file':  # Los archivos los manejamos aparte
-                    valor = ''
-                    if campo.nombre in respuestas_tipo:
-                        opciones = respuestas_tipo[campo.nombre]
-                        if callable(opciones):
-                            valor = opciones()
-                        else:
-                            valor = random.choice(opciones)
-
-                    RespuestaCampo.objects.create(
-                        solicitud=solicitud,
-                        campo=campo,
-                        valor=valor
-                    )
+            for campo in tipo.formulario.campos.all():
+                if campo.tipo != 'file':
+                    self._crear_respuesta_campo(
+                        solicitud, campo, respuestas_tipo)
                 else:
-                    # Crear campos de archivo con archivos adjuntos reales
-                    respuesta_campo = RespuestaCampo.objects.create(
-                        solicitud=solicitud,
-                        campo=campo,
-                        valor=''
-                    )
+                    self._crear_archivos_adjuntos(solicitud, campo)
 
-                    # Crear archivos adjuntos (algunos formularios permiten múltiples archivos)
-                    cantidad_archivos = random.randint(
-                        1, min(campo.cantidad_archivos, 3))
-                    tipos_archivo = ['pdf', 'txt', 'jpg']
-                    extensiones = {'pdf': 'pdf', 'txt': 'txt', 'jpg': 'jpg'}
-
-                    for j in range(cantidad_archivos):
-                        tipo_elegido = random.choice(tipos_archivo)
-                        ext = extensiones[tipo_elegido]
-                        nombre_archivo = f'{campo.nombre}_{j+1}.{ext}'
-
-                        archivo_content = self.crear_archivo_prueba(
-                            nombre_archivo, tipo_elegido)
-
-                        archivo_adjunto = ArchivoAdjunto.objects.create(
-                            solicitud=solicitud,
-                            respuesta=respuesta_campo,
-                            nombre=nombre_archivo
-                        )
-                        archivo_adjunto.archivo.save(
-                            nombre_archivo, archivo_content, save=True)
-
-            # Crear seguimiento inicial
-            SeguimientoSolicitud.objects.create(
-                solicitud=solicitud,
-                estatus='1',  # Creada
-                observaciones='Solicitud creada por el usuario'
-            )
-
-            # Algunos pueden tener seguimientos adicionales
-            if random.random() > 0.5:
-                # Agregar seguimiento "En proceso"
-                SeguimientoSolicitud.objects.create(
-                    solicitud=solicitud,
-                    estatus='2',
-                    observaciones=random.choice([
-                        'La solicitud está siendo revisada',
-                        'Se requiere documentación adicional',
-                        'En espera de aprobación del coordinador',
-                        'Procesando la solicitud',
-                    ])
-                )
-
-                # Algunos pueden estar terminados
-                if random.random() > 0.6:
-                    SeguimientoSolicitud.objects.create(
-                        solicitud=solicitud,
-                        estatus='3',
-                        observaciones=random.choice([
-                            'Solicitud aprobada y procesada',
-                            'Documento entregado al solicitante',
-                            'Trámite completado exitosamente',
-                            'Solicitud finalizada',
-                        ])
-                    )
+            self._crear_seguimientos(solicitud)
 
         return self.solicitudes
 

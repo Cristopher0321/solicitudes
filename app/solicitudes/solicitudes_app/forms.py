@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.core.validators import RegexValidator, MinLengthValidator
 from django.core.exceptions import ValidationError
 import re
 from .models import Usuario
@@ -96,7 +95,8 @@ class RegistroUsuarioForm(UserCreationForm):
         # Validar que solo contenga letras, números y guiones bajos
         if not re.match(r'^[a-zA-Z0-9_]+$', username):
             raise forms.ValidationError(
-                "El nombre de usuario solo puede contener letras, números y guiones bajos.")
+                "El nombre de usuario solo puede contener letras, números "
+                "y guiones bajos.")
 
         # Validar que no esté duplicado
         if Usuario.objects.filter(username=username).exists():
@@ -169,36 +169,34 @@ class RegistroUsuarioForm(UserCreationForm):
 
         return telefono_limpio
 
+    def _validar_complejidad_password(self, password):
+        """Valida requisitos de complejidad de contraseña"""
+        validaciones = [
+            (r'[A-Z]',
+             "La contraseña debe contener al menos una letra mayúscula."),
+            (r'[a-z]',
+             "La contraseña debe contener al menos una letra minúscula."),
+            (r'\d',
+             "La contraseña debe contener al menos un número."),
+            (r'[!@#$%^&*(),.?":{}|<>]',
+             "La contraseña debe contener al menos un carácter especial "
+             "(!@#$%^&*..)."),
+        ]
+
+        for patron, mensaje in validaciones:
+            if not re.search(patron, password):
+                raise forms.ValidationError(mensaje)
+
     def clean_password1(self):
         password1 = self.cleaned_data.get('password1')
         if not password1:
             raise forms.ValidationError("La contraseña es obligatoria.")
 
-        # Validar longitud mínima
         if len(password1) < 8:
             raise forms.ValidationError(
                 "La contraseña debe tener al menos 8 caracteres.")
 
-        # Validar que contenga al menos una letra mayúscula
-        if not re.search(r'[A-Z]', password1):
-            raise forms.ValidationError(
-                "La contraseña debe contener al menos una letra mayúscula.")
-
-        # Validar que contenga al menos una letra minúscula
-        if not re.search(r'[a-z]', password1):
-            raise forms.ValidationError(
-                "La contraseña debe contener al menos una letra minúscula.")
-
-        # Validar que contenga al menos un número
-        if not re.search(r'\d', password1):
-            raise forms.ValidationError(
-                "La contraseña debe contener al menos un número.")
-
-        # Validar que contenga al menos un carácter especial
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password1):
-            raise forms.ValidationError(
-                "La contraseña debe contener al menos un carácter especial (!@#$%^&*...).")
-
+        self._validar_complejidad_password(password1)
         return password1
 
     def clean(self):
@@ -245,18 +243,26 @@ class ActualizarPerfilForm(forms.ModelForm):
         fields = ['first_name', 'last_name',
                   'email', 'telefono', 'area', 'matricula']
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre(s)'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellidos'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Correo electrónico'}),
-            'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Teléfono'}),
-            'area': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Área'}),
-            'matricula': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Matrícula'}),
+            'first_name': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'Nombre(s)'}),
+            'last_name': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'Apellidos'}),
+            'email': forms.EmailInput(
+                attrs={'class': 'form-control',
+                       'placeholder': 'Correo electrónico'}),
+            'telefono': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'Teléfono'}),
+            'area': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'Área'}),
+            'matricula': forms.TextInput(
+                attrs={'class': 'form-control', 'placeholder': 'Matrícula'}),
         }
 
     def clean_first_name(self):
         """Validar que el nombre solo contenga letras y espacios"""
         first_name = self.cleaned_data.get('first_name')
-        if first_name and not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$', first_name):
+        if first_name and not re.match(
+                r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$', first_name):
             raise ValidationError(
                 'El nombre solo debe contener letras y espacios.')
         return first_name
@@ -324,7 +330,8 @@ class GestionarUsuarioForm(forms.ModelForm):
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
             'area': forms.TextInput(attrs={'class': 'form-control'}),
             'matricula': forms.TextInput(attrs={'class': 'form-control'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_active': forms.CheckboxInput(
+                attrs={'class': 'form-check-input'}),
         }
 
     def clean_username(self):
@@ -333,10 +340,14 @@ class GestionarUsuarioForm(forms.ModelForm):
             # Validar que solo contenga letras, números y guiones bajos
             if not re.match(r'^[a-zA-Z0-9_]+$', username):
                 raise ValidationError(
-                    'El nombre de usuario solo puede contener letras, números y guiones bajos.')
-            # Verificar que no exista otro usuario con el mismo username (excluyendo el usuario actual)
-            if Usuario.objects.filter(username=username).exclude(id=self.instance.id).exists():
-                raise ValidationError('Este nombre de usuario ya está en uso.')
+                    'El nombre de usuario solo puede contener letras, '
+                    'números y guiones bajos.')
+            # Verificar que no exista otro usuario con el mismo username
+            # (excluyendo el usuario actual)
+            if Usuario.objects.filter(username=username).exclude(
+                    id=self.instance.id).exists():
+                raise ValidationError(
+                    'Este nombre de usuario ya está en uso.')
         return username
 
     def clean_first_name(self):
@@ -360,8 +371,10 @@ class GestionarUsuarioForm(forms.ModelForm):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
-            # Verificar que no exista otro usuario con el mismo email (excluyendo el usuario actual)
-            if Usuario.objects.filter(email=email).exclude(id=self.instance.id).exists():
+            # Verificar que no exista otro usuario con el mismo email
+            # (excluyendo el usuario actual)
+            if Usuario.objects.filter(email=email).exclude(
+                    id=self.instance.id).exists():
                 raise ValidationError(
                     'Este correo electrónico ya está registrado.')
         return email
@@ -382,7 +395,9 @@ class GestionarUsuarioForm(forms.ModelForm):
             if not re.match(r'^\d{5,8}$', matricula):
                 raise ValidationError(
                     'La matrícula debe tener entre 5 y 8 dígitos.')
-            # Verificar que no exista otro usuario con la misma matrícula (excluyendo el usuario actual)
-            if Usuario.objects.filter(matricula=matricula).exclude(id=self.instance.id).exists():
+            # Verificar que no exista otro usuario con la misma matrícula
+            # (excluyendo el usuario actual)
+            if Usuario.objects.filter(matricula=matricula).exclude(
+                    id=self.instance.id).exists():
                 raise ValidationError('Esta matrícula ya está registrada.')
         return matricula

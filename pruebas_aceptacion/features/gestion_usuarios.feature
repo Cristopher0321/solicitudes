@@ -58,3 +58,20 @@ Feature: Gestión de Usuarios por Administrador
     When el usuario intenta acceder a la página de gestión de usuarios
     Then el usuario es redirigido a la página de bienvenida
 
+  Scenario: Administrador no puede quitarse su propio rol de administrador
+    When el administrador visita la página de edición de su propio usuario
+    And intenta cambiar su rol a "alumno"
+    And guarda los cambios
+    Then ve un mensaje de error "No puedes quitarte tu propio rol de administrador"
+    And su rol permanece como "administrador"
+
+  Scenario: Validación de username duplicado en edición de usuario
+    Given que existe un usuario solamente con username "usuario1"
+    And que existe un usuario solamente con username "usuario2"
+    When el administrador visita la página de edición del usuario "usuario1"
+    And intenta cambiar el username a "usuario2"
+    And guarda los cambios
+    Then ve un mensaje de error "Este nombre de usuario ya está en uso"
+    And el username permanece como "usuario1"
+
+

@@ -17,12 +17,14 @@ def rol_requerido(*roles):
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
                 messages.error(
-                    request, 'Debes iniciar sesión para acceder a esta página.')
-                return redirect('login')
+                    request,
+                    'Debes iniciar sesión para acceder a esta página.')
+                return redirect('solicitudes_app:login')
 
             if request.user.rol not in roles:
                 messages.error(
-                    request, 'No tienes permiso para acceder a esta página.')
+                    request,
+                    'No tienes permiso para acceder a esta página.')
                 return redirect('bienvenida')
 
             return view_func(request, *args, **kwargs)
@@ -39,11 +41,12 @@ def administrador_requerido(view_func):
         if not request.user.is_authenticated:
             messages.error(
                 request, 'Debes iniciar sesión para acceder a esta página.')
-            return redirect('login')
+            return redirect('solicitudes_app:login')
 
         if not request.user.puede_gestionar_usuarios():
             messages.error(
-                request, 'Solo los administradores pueden acceder a esta página.')
+                request,
+                'Solo los administradores pueden acceder a esta página.')
             return redirect('bienvenida')
 
         return view_func(request, *args, **kwargs)
@@ -57,15 +60,8 @@ def puede_crear_tipos(view_func):
     """
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            messages.error(
-                request, 'Debes iniciar sesión para acceder a esta página.')
-            return redirect('login')
-
-        if not request.user.puede_crear_tipo_solicitud():
-            messages.error(
-                request, 'No tienes permiso para crear tipos de solicitud.')
-            return redirect('bienvenida')
+        if not request.user.is_authenticated: messages.error(request, 'Debes iniciar sesión para acceder a esta página.'); return redirect('solicitudes_app:login')
+        if not request.user.puede_crear_tipo_solicitud(): messages.error(request, 'No tienes permiso para crear tipos.'); return redirect('bienvenida')
 
         return view_func(request, *args, **kwargs)
     return wrapper
@@ -77,15 +73,8 @@ def puede_atender_solicitudes(view_func):
     """
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            messages.error(
-                request, 'Debes iniciar sesión para acceder a esta página.')
-            return redirect('login')
-
-        if not request.user.puede_atender_solicitudes():
-            messages.error(
-                request, 'No tienes permiso para atender solicitudes.')
-            return redirect('bienvenida')
+        if not request.user.is_authenticated: messages.error(request, 'Debes iniciar sesión para acceder a esta página.'); return redirect('solicitudes_app:login')
+        if not request.user.puede_atender_solicitudes(): messages.error(request, 'No tienes permiso para atender.'); return redirect('bienvenida')
 
         return view_func(request, *args, **kwargs)
     return wrapper
@@ -100,11 +89,12 @@ def puede_ver_dashboard(view_func):
         if not request.user.is_authenticated:
             messages.error(
                 request, 'Debes iniciar sesión para acceder a esta página.')
-            return redirect('login')
+            return redirect('solicitudes_app:login')
 
         if not request.user.puede_ver_dashboard():
             messages.error(
-                request, 'Solo los administradores pueden ver el dashboard completo.')
+                request,
+                'Solo los administradores pueden ver el dashboard completo.')
             return redirect('bienvenida')
 
         return view_func(request, *args, **kwargs)

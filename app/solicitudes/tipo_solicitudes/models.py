@@ -8,20 +8,12 @@ RESPOSABLES = [
     ('4', 'Director'),
 ]
 
-DESTINATARIOS = [
-    ('alumno', 'Solo Alumnos'),
-    ('docente', 'Solo Personal/Docentes'),
-    ('ambos', 'Alumnos y Personal'),
-]
-
 
 class TipoSolicitud(models.Model):
     nombre = models.CharField(max_length=150)
     descripcion = models.CharField(max_length=350)
     responsable = models.CharField(
         max_length=1, choices=RESPOSABLES, default='1')
-    destinatario = models.CharField(
-        max_length=10, choices=DESTINATARIOS, default='ambos')
 
     def __str__(self):
         return self.nombre
@@ -78,23 +70,23 @@ class Solicitud(models.Model):
     tipo_solicitud = models.ForeignKey(TipoSolicitud, on_delete=models.CASCADE)
     folio = models.CharField(max_length=20, unique=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    estatus = models.CharField(max_length=1, choices=ESTATUS, default='1')
+    estatus = models.CharField(
+        max_length=1, choices=ESTATUS, default='1')  # <--- CAMPO AÑADIDO
 
     def __str__(self):
         return f"{self.folio}"
+    
+    @property
+    def estatus(self):
+        """Retorna el estatus del último seguimiento"""
+        ultimo = self.seguimientos.order_by('-fecha_creacion').first()
+        return ultimo.estatus if ultimo else '1'
+    
+    def get_estatus_display(self):
+        """Retorna el display name del estatus actual"""
+        estatus_dict = dict(ESTATUS)
+        return estatus_dict.get(self.estatus, 'Desconocido')
 
-    def get_ultimo_estatus(self):
-        """Obtiene el estatus del último seguimiento o el estatus base"""
-        ultimo_seguimiento = self.seguimientos.order_by(
-            '-fecha_creacion').first()
-        if ultimo_seguimiento:
-            return ultimo_seguimiento.estatus
-        return self.estatus
-
-    def get_ultimo_estatus_display(self):
-        """Obtiene el display del último estatus"""
-        estatus = self.get_ultimo_estatus()
-        return dict(ESTATUS).get(estatus, 'Desconocido')
 
 
 class RespuestaCampo(models.Model):
@@ -130,6 +122,3 @@ class SeguimientoSolicitud(models.Model):
     fecha_terminacion = models.DateTimeField(null=True, blank=True)
     observaciones = models.TextField(blank=True)
     estatus = models.CharField(max_length=1, choices=ESTATUS)
-
-    def __str__(self):
-        return f"Seguimiento {self.solicitud.folio} - {self.get_estatus_display()}"

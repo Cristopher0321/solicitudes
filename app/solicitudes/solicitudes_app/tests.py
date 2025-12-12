@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from solicitudes_app.models import Usuario
-from solicitudes_app.forms import RegistroUsuarioForm, LoginForm
+from solicitudes_app.forms import RegistroUsuarioForm
 
 
 class UsuarioModelTest(TestCase):

@@ -1,10 +1,13 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import SimpleUploadedFile
-from tipo_solicitudes.models import CampoFormulario, RespuestaCampo, Solicitud, TipoSolicitud, FormularioSolicitud
-from tipo_solicitudes.forms import FormArchivoAdjunto, FormSolicitud, FormTipoSolicitud, FormFormularioSolicitud, FormCampoFormulario, validar_archivo
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
+from tipo_solicitudes.models import (
+    CampoFormulario, RespuestaCampo, Solicitud,
+    TipoSolicitud, FormularioSolicitud)
+from tipo_solicitudes.forms import (
+    FormArchivoAdjunto, FormRespuestaCampo, FormSeguimientoSolicitud,
+    FormSolicitud, FormTipoSolicitud, FormFormularioSolicitud,
+    FormCampoFormulario)
 
 Usuario = get_user_model()
 
@@ -176,16 +179,6 @@ class TestFormCampoFormulario(TestCase):
         form = FormCampoFormulario(data=data)
         self.assertFalse(form.is_valid())
         self.assertIn('formulario', form.errors)
-
-    def test_form_campo_formulario_init_con_formulario(self):
-        """Prueba que el __init__ acepta y guarda el parámetro formulario"""
-        form = FormCampoFormulario(formulario=self.formulario_solicitud)
-        self.assertEqual(form.formulario, self.formulario_solicitud)
-
-    def test_form_campo_formulario_init_sin_formulario(self):
-        """Prueba que el __init__ funciona sin el parámetro formulario"""
-        form = FormCampoFormulario()
-        self.assertIsNone(form.formulario)
 
 
 class TestFormSolicitud(TestCase):
@@ -362,166 +355,3 @@ class TestFormArchivoAdjunto(TestCase):
 
         self.assertEqual(archivo_adjunto.nombre, 'Constancia de Bachiller')
         self.assertIsNotNone(archivo_adjunto.archivo)
-
-
-class TestValidarArchivo(TestCase):
-    """Pruebas para la función validar_archivo() de forms.py"""
-
-    def setUp(self):
-        # Archivo válido PDF pequeño (1MB)
-        self.pdf_valido = SimpleUploadedFile(
-            "documento.pdf",
-            b'x' * (1024 * 1024),  # 1MB
-            content_type="application/pdf"
-        )
-
-        # Archivo válido JPG pequeño
-        self.jpg_valido = SimpleUploadedFile(
-            "imagen.jpg",
-            b'x' * (500 * 1024),  # 500KB
-            content_type="image/jpeg"
-        )
-
-        # Archivo válido PNG pequeño
-        self.png_valido = SimpleUploadedFile(
-            "imagen.png",
-            b'x' * (300 * 1024),  # 300KB
-            content_type="image/png"
-        )
-
-        # Archivo válido GIF pequeño
-        self.gif_valido = SimpleUploadedFile(
-            "imagen.gif",
-            b'x' * (200 * 1024),  # 200KB
-            content_type="image/gif"
-        )
-
-        # Archivo válido JPEG (variante de jpg)
-        self.jpeg_valido = SimpleUploadedFile(
-            "imagen.jpeg",
-            b'x' * (400 * 1024),  # 400KB
-            content_type="image/jpeg"
-        )
-
-        # Archivo exactamente en el límite de 2MB
-        self.archivo_limite_2mb = SimpleUploadedFile(
-            "limite.pdf",
-            b'x' * (2 * 1024 * 1024),  # Exactamente 2MB
-            content_type="application/pdf"
-        )
-
-        # Archivo que excede 2MB
-        self.archivo_muy_grande = SimpleUploadedFile(
-            "grande.pdf",
-            b'x' * (3 * 1024 * 1024),  # 3MB
-            content_type="application/pdf"
-        )
-
-        # Archivo con extensión inválida
-        self.archivo_invalido_ext = SimpleUploadedFile(
-            "documento.doc",
-            b'x' * (500 * 1024),  # 500KB
-            content_type="application/msword"
-        )
-
-        # Archivo con extensión inválida (txt)
-        self.archivo_txt = SimpleUploadedFile(
-            "documento.txt",
-            b'x' * (100 * 1024),  # 100KB
-            content_type="text/plain"
-        )
-
-    def test_validar_archivo_pdf_valido(self):
-        """Prueba que un archivo PDF válido pasa la validación"""
-        resultado = validar_archivo(self.pdf_valido)
-        self.assertEqual(resultado, self.pdf_valido)
-
-    def test_validar_archivo_jpg_valido(self):
-        """Prueba que un archivo JPG válido pasa la validación"""
-        resultado = validar_archivo(self.jpg_valido)
-        self.assertEqual(resultado, self.jpg_valido)
-
-    def test_validar_archivo_jpeg_valido(self):
-        """Prueba que un archivo JPEG válido pasa la validación"""
-        resultado = validar_archivo(self.jpeg_valido)
-        self.assertEqual(resultado, self.jpeg_valido)
-
-    def test_validar_archivo_png_valido(self):
-        """Prueba que un archivo PNG válido pasa la validación"""
-        resultado = validar_archivo(self.png_valido)
-        self.assertEqual(resultado, self.png_valido)
-
-    def test_validar_archivo_gif_valido(self):
-        """Prueba que un archivo GIF válido pasa la validación"""
-        resultado = validar_archivo(self.gif_valido)
-        self.assertEqual(resultado, self.gif_valido)
-
-    def test_validar_archivo_limite_2mb(self):
-        """Prueba que un archivo exactamente en el límite de 2MB pasa la validación"""
-        resultado = validar_archivo(self.archivo_limite_2mb)
-        self.assertEqual(resultado, self.archivo_limite_2mb)
-
-    def test_validar_archivo_excede_2mb(self):
-        """Prueba que un archivo que excede 2MB lanza ValidationError"""
-        with self.assertRaises(ValidationError) as context:
-            validar_archivo(self.archivo_muy_grande)
-
-        error_message = str(context.exception)
-        self.assertIn('demasiado grande', error_message)
-        self.assertIn('2MB', error_message)
-
-    def test_validar_archivo_extension_invalida_doc(self):
-        """Prueba que un archivo con extensión .doc lanza ValidationError"""
-        with self.assertRaises(ValidationError) as context:
-            validar_archivo(self.archivo_invalido_ext)
-
-        error_message = str(context.exception)
-        self.assertIn('Tipo de archivo no permitido', error_message)
-        self.assertIn('.doc', error_message)
-        self.assertIn('PDF, JPG, JPEG, PNG, GIF', error_message)
-
-    def test_validar_archivo_extension_invalida_txt(self):
-        """Prueba que un archivo con extensión .txt lanza ValidationError"""
-        with self.assertRaises(ValidationError) as context:
-            validar_archivo(self.archivo_txt)
-
-        error_message = str(context.exception)
-        self.assertIn('Tipo de archivo no permitido', error_message)
-        self.assertIn('.txt', error_message)
-
-    def test_validar_archivo_extension_case_insensitive(self):
-        """Prueba que la validación de extensión es case-insensitive"""
-        # Archivo con extensión en mayúsculas
-        archivo_pdf_mayusculas = SimpleUploadedFile(
-            "DOCUMENTO.PDF",
-            b'x' * (500 * 1024),
-            content_type="application/pdf"
-        )
-        resultado = validar_archivo(archivo_pdf_mayusculas)
-        self.assertEqual(resultado, archivo_pdf_mayusculas)
-
-        # Archivo con extensión mixta
-        archivo_jpg_mixto = SimpleUploadedFile(
-            "IMAGEN.JpG",
-            b'x' * (300 * 1024),
-            content_type="image/jpeg"
-        )
-        resultado = validar_archivo(archivo_jpg_mixto)
-        self.assertEqual(resultado, archivo_jpg_mixto)
-
-    def test_validar_archivo_mensaje_error_tamaño_incluye_nombre(self):
-        """Prueba que el mensaje de error de tamaño incluye el nombre del archivo"""
-        with self.assertRaises(ValidationError) as context:
-            validar_archivo(self.archivo_muy_grande)
-
-        error_message = str(context.exception)
-        self.assertIn('grande.pdf', error_message)
-
-    def test_validar_archivo_mensaje_error_tamaño_muestra_mb(self):
-        """Prueba que el mensaje de error muestra el tamaño en MB"""
-        with self.assertRaises(ValidationError) as context:
-            validar_archivo(self.archivo_muy_grande)
-
-        error_message = str(context.exception)
-        # Debería mostrar algo como "3.00MB" o similar
-        self.assertIn('MB', error_message)

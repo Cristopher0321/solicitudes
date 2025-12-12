@@ -54,7 +54,7 @@ def step_impl(context, nombre):
                     By.XPATH, ".//a[contains(., 'Agregar Preguntas')]")
                 agregar_link.click()
                 time.sleep(1)
-            except:
+            except BaseException:
                 pass
 
     # Extraer el formulario_id de la URL y llenar el campo oculto
@@ -82,7 +82,7 @@ def step_impl(context, orden):
             tds = tr.find_elements(By.TAG_NAME, 'td')
             if tds and len(tds) > 0 and tds[0].text == orden:
                 return
-    except:
+    except BaseException:
         pass
 
     context.driver.find_element(By.NAME, 'nombre').clear()
@@ -138,7 +138,7 @@ def step_impl(context, etiqueta):
                 context.ultimo_campo_etiqueta = etiqueta
                 context.ultimo_campo_nombre = nombre_campo
                 return
-    except:
+    except BaseException:
         pass
 
     context.driver.find_element(By.NAME, 'nombre').clear()
@@ -179,7 +179,8 @@ def step_impl(context, etiqueta):
 
 @given(u'no existen campos agregados todavía')
 def step_impl(context):
-    # Eliminar todos los campos existentes para asegurar que la tabla esté vacía
+    # Eliminar todos los campos existentes para asegurar que la tabla esté
+    # vacía
     while True:
         try:
             tabla = context.driver.find_element(
@@ -283,10 +284,10 @@ def step_impl(context):
     select = Select(select_element)
     try:
         select.select_by_value('')
-    except:
+    except BaseException:
         try:
             select.select_by_visible_text('---------')
-        except:
+        except BaseException:
             pass
     time.sleep(0.3)
 
@@ -316,7 +317,7 @@ def step_impl(context, valor):
     try:
         orden_num = int(valor)
         orden_final = str(context.orden_base + orden_num)
-    except:
+    except BaseException:
         orden_final = valor
 
     element = context.driver.find_element(By.NAME, 'orden')
@@ -358,7 +359,7 @@ def step_impl(context):
                 (By.CSS_SELECTOR, '.table-bordered'))
         )
         assert tabla.is_displayed(), "La tabla de campos no está visible"
-    except:
+    except BaseException:
         pass
     time.sleep(0.5)
 
@@ -374,13 +375,17 @@ def step_impl(context):
         except:
             pass
 
+    wait = WebDriverWait(context.driver, 10)
     try:
-        agregar_btn = context.driver.find_element(
-            By.XPATH, "//button[contains(text(), 'Agregar campo')]")
+        agregar_btn = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[contains(text(), 'Agregar campo')]")))
     except:
-        agregar_btn = context.driver.find_element(
-            By.XPATH, "//button[@type='submit']")
-    agregar_btn.click()
+        agregar_btn = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[@type='submit']")))
+    context.driver.execute_script(
+        "arguments[0].scrollIntoView({block: 'center'});", agregar_btn)
+    time.sleep(0.5)
+    context.driver.execute_script("arguments[0].click();", agregar_btn)
     time.sleep(2)
 
 
@@ -404,7 +409,7 @@ def step_impl(context, etiqueta):
                     alert = context.driver.switch_to.alert
                     alert.accept()
                     time.sleep(1)
-                except:
+                except BaseException:
                     pass
                 break
     except Exception as e:
@@ -461,7 +466,9 @@ def step_impl(context, tipo):
     for tr in reversed(trs):
         tds = tr.find_elements(By.TAG_NAME, 'td')
         if tds and len(tds) > 2:
-            if hasattr(context, 'ultima_etiqueta') and context.ultima_etiqueta in tds[1].text:
+            if hasattr(
+                    context,
+                    'ultima_etiqueta') and context.ultima_etiqueta in tds[1].text:
                 tipo_mostrado = tds[2].text
                 assert tipo in tipo_mostrado, \
                     f"El tipo mostrado '{tipo_mostrado}' no contiene '{tipo}'"
@@ -478,7 +485,9 @@ def step_impl(context):
     for tr in reversed(trs):
         tds = tr.find_elements(By.TAG_NAME, 'td')
         if tds and len(tds) > 3:
-            if hasattr(context, 'ultima_etiqueta') and context.ultima_etiqueta in tds[1].text:
+            if hasattr(
+                    context,
+                    'ultima_etiqueta') and context.ultima_etiqueta in tds[1].text:
                 requerido = tds[3].text
                 assert 'True' in requerido or 'Sí' in requerido, \
                     f"El campo no aparece como requerido: {requerido}"
@@ -495,7 +504,9 @@ def step_impl(context):
     for tr in reversed(trs):
         tds = tr.find_elements(By.TAG_NAME, 'td')
         if tds and len(tds) > 3:
-            if hasattr(context, 'ultima_etiqueta') and context.ultima_etiqueta in tds[1].text:
+            if hasattr(
+                    context,
+                    'ultima_etiqueta') and context.ultima_etiqueta in tds[1].text:
                 requerido = tds[3].text
                 assert 'False' in requerido or 'No' in requerido, \
                     f"El campo no aparece como no requerido: {requerido}"
@@ -512,7 +523,9 @@ def step_impl(context):
     for tr in reversed(trs):
         tds = tr.find_elements(By.TAG_NAME, 'td')
         if tds and len(tds) > 4:
-            if hasattr(context, 'ultima_etiqueta') and context.ultima_etiqueta in tds[1].text:
+            if hasattr(
+                    context,
+                    'ultima_etiqueta') and context.ultima_etiqueta in tds[1].text:
                 opciones_mostradas = tds[4].text
                 if hasattr(context, 'opciones_guardadas'):
                     assert len(
@@ -530,7 +543,9 @@ def step_impl(context, cantidad):
     for tr in reversed(trs):
         tds = tr.find_elements(By.TAG_NAME, 'td')
         if tds and len(tds) > 5:
-            if hasattr(context, 'ultima_etiqueta') and context.ultima_etiqueta in tds[1].text:
+            if hasattr(
+                    context,
+                    'ultima_etiqueta') and context.ultima_etiqueta in tds[1].text:
                 cantidad_mostrada = tds[5].text
                 assert cantidad in cantidad_mostrada, \
                     f"La cantidad mostrada '{cantidad_mostrada}' no contiene '{cantidad}'"
@@ -541,46 +556,46 @@ def step_impl(context, cantidad):
 @then(u'veo un mensaje de error indicando que el nombre es obligatorio')
 def step_impl(context):
     # Verificar que permanece en la página
-    assert '/tipo-solicitud/formularios/campos/' in context.driver.current_url
+    assert '/formulario/' in context.driver.current_url and '/campos/' in context.driver.current_url
 
     try:
         error_elements = context.driver.find_elements(
             By.CLASS_NAME, 'errorlist')
         assert len(error_elements) > 0, "No se encontró mensaje de error"
-    except:
+    except BaseException:
         pass
     time.sleep(1)
 
 
 @then(u'veo un mensaje de error indicando que la etiqueta es obligatoria')
 def step_impl(context):
-    assert '/tipo-solicitud/formularios/campos/' in context.driver.current_url
+    assert '/formulario/' in context.driver.current_url and '/campos/' in context.driver.current_url
 
     try:
         error_elements = context.driver.find_elements(
             By.CLASS_NAME, 'errorlist')
         assert len(error_elements) > 0, "No se encontró mensaje de error"
-    except:
+    except BaseException:
         pass
     time.sleep(1)
 
 
 @then(u'veo un mensaje de error indicando que debe seleccionar un tipo de campo')
 def step_impl(context):
-    assert '/tipo-solicitud/formularios/campos/' in context.driver.current_url
+    assert '/formulario/' in context.driver.current_url and '/campos/' in context.driver.current_url
 
     try:
         error_elements = context.driver.find_elements(
             By.CLASS_NAME, 'errorlist')
         assert len(error_elements) > 0, "No se encontró mensaje de error"
-    except:
+    except BaseException:
         pass
     time.sleep(1)
 
 
 @then(u'veo un mensaje de error indicando que el orden ya está en uso')
 def step_impl(context):
-    assert '/tipo-solicitud/formularios/campos/' in context.driver.current_url
+    assert '/formulario/' in context.driver.current_url and '/campos/' in context.driver.current_url
 
     try:
         error_elements = context.driver.find_elements(
@@ -595,13 +610,13 @@ def step_impl(context):
 @then(u'veo un mensaje de error o advertencia sobre las opciones faltantes')
 def step_impl(context):
     # Este puede ser un caso donde la validación no sea tan estricta
-    assert '/tipo-solicitud/formularios/campos/' in context.driver.current_url
+    assert '/formulario/' in context.driver.current_url and '/campos/' in context.driver.current_url
     time.sleep(1)
 
 
 @then(u'permanezco en la página de agregar preguntas')
 def step_impl(context):
-    assert '/tipo-solicitud/formularios/campos/' in context.driver.current_url, \
+    assert '/formulario/' in context.driver.current_url and '/campos/' in context.driver.current_url, \
         f"No permanece en la página de campos. URL actual: {context.driver.current_url}"
     time.sleep(0.5)
 
@@ -628,7 +643,7 @@ def step_impl(context, etiqueta):
 
 @then(u'veo una confirmación de eliminación exitosa')
 def step_impl(context):
-    assert '/tipo-solicitud/formularios/campos/' in context.driver.current_url
+    assert '/formulario/' in context.driver.current_url and '/campos/' in context.driver.current_url
     time.sleep(0.5)
 
 
@@ -638,7 +653,7 @@ def step_impl(context):
         mensaje = context.driver.find_element(
             By.XPATH, "//*[contains(text(), 'No hay campos agregados')]")
         assert mensaje.is_displayed(), "El mensaje no está visible"
-    except:
+    except BaseException:
         page_text = context.driver.find_element(By.TAG_NAME, 'body').text
         assert 'No hay campos agregados' in page_text, \
             f"No se encontró el mensaje esperado. Texto de la página: {page_text[:200]}"
@@ -685,7 +700,7 @@ def step_impl(context):
         parent = opciones_field.find_element(By.XPATH, '..')
         display_style = parent.value_of_css_property('display')
         assert display_style == 'none', f"El campo opciones es visible (display: {display_style}) cuando no debería"
-    except:
+    except BaseException:
         pass
     time.sleep(0.3)
 
@@ -707,7 +722,7 @@ def step_impl(context):
         parent = archivos_field.find_element(By.XPATH, '..')
         display_style = parent.value_of_css_property('display')
         assert display_style == 'none', f"El campo cantidad_archivos es visible (display: {display_style}) cuando no debería"
-    except:
+    except BaseException:
         pass
     time.sleep(0.3)
 

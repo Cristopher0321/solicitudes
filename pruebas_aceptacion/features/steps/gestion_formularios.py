@@ -19,7 +19,9 @@ def step_impl(context, nombre):
     context.driver.get(f"{context.url}/tipo-solicitud/formularios/")
     time.sleep(1)
 
-    body = context.driver.find_element(By.ID, 'bodyTipoSolicitudes')
+    wait = WebDriverWait(context.driver, 10)
+    body = wait.until(EC.presence_of_element_located(
+        (By.ID, 'bodyTipoSolicitudes')))
     trs = body.find_elements(By.TAG_NAME, 'tr')
     existe = False
 
@@ -31,10 +33,12 @@ def step_impl(context, nombre):
 
     if not existe:
         tipo_nombre = f"TipoPara{nombre.replace(' ', '')}"
-        context.driver.get(f"{context.url}/tipo-solicitud/lista/")
+        context.driver.get(f"{context.url}/tipo-solicitud/")
         time.sleep(0.5)
 
-        body_tipos = context.driver.find_element(By.ID, 'bodyTipoSolicitudes')
+        wait = WebDriverWait(context.driver, 10)
+        body_tipos = wait.until(EC.presence_of_element_located(
+            (By.ID, 'bodyTipoSolicitudes')))
         trs_tipos = body_tipos.find_elements(By.TAG_NAME, 'tr')
         tipo_existe = False
 
@@ -45,7 +49,7 @@ def step_impl(context, nombre):
                 break
 
         if not tipo_existe:
-            context.driver.get(f"{context.url}/tipo-solicitud/")
+            context.driver.get(f"{context.url}/tipo-solicitud/agregar/")
             time.sleep(0.5)
             context.driver.find_element(
                 By.NAME, 'nombre').send_keys(tipo_nombre)
@@ -55,8 +59,12 @@ def step_impl(context, nombre):
                 By.NAME, 'responsable')
             select = Select(select_element)
             select.select_by_value('1')
-            context.driver.find_element(
-                By.XPATH, "//button[@type='submit']").click()
+            submit_btn = context.driver.find_element(
+                By.XPATH, "//button[@type='submit']")
+            context.driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center'});", submit_btn)
+            time.sleep(0.5)
+            submit_btn.click()
             time.sleep(2)
 
         context.driver.get(f"{context.url}/tipo-solicitud/formularios/crear/")
@@ -66,7 +74,7 @@ def step_impl(context, nombre):
         select = Select(select_element)
         try:
             select.select_by_visible_text(tipo_nombre)
-        except:
+        except BaseException:
             options = [opt.text for opt in select.options]
             if options:
                 select.select_by_index(1)
@@ -74,8 +82,14 @@ def step_impl(context, nombre):
         context.driver.find_element(By.NAME, 'nombre').send_keys(nombre)
         context.driver.find_element(By.NAME, 'descripcion').send_keys(
             f"Descripción de {nombre}")
-        context.driver.find_element(
-            By.XPATH, "//button[@type='submit']").click()
+
+        wait = WebDriverWait(context.driver, 10)
+        submit_btn = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[@type='submit']")))
+        context.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'});", submit_btn)
+        time.sleep(0.5)
+        context.driver.execute_script("arguments[0].click();", submit_btn)
         time.sleep(2)
 
     context.driver.get(f"{context.url}/tipo-solicitud/formularios/")
@@ -100,39 +114,27 @@ def step_impl(context, tipo):
 
     try:
         select.select_by_visible_text(tipo)
-    except:
-        context.driver.get(f"{context.url}/tipo-solicitud/lista/")
         time.sleep(0.5)
+    except BaseException:
+        # Si no existe el tipo, crearlo directamente
+        context.driver.get(f"{context.url}/tipo-solicitud/agregar/")
+        time.sleep(1)
+        context.driver.find_element(By.NAME, 'nombre').send_keys(tipo)
+        context.driver.find_element(By.NAME, 'descripcion').send_keys(
+            f"Descripción de {tipo}")
+        select_resp = context.driver.find_element(By.NAME, 'responsable')
+        Select(select_resp).select_by_value('1')
+        context.driver.find_element(
+            By.XPATH, "//button[@type='submit']").click()
+        time.sleep(2)
 
-        body = context.driver.find_element(By.ID, 'bodyTipoSolicitudes')
-        trs = body.find_elements(By.TAG_NAME, 'tr')
-        existe = False
-
-        for tr in trs:
-            tds = tr.find_elements(By.TAG_NAME, 'td')
-            if tds and tds[0].text == tipo:
-                existe = True
-                break
-
-        if not existe:
-            context.driver.get(f"{context.url}/tipo-solicitud/")
-            time.sleep(0.5)
-            context.driver.find_element(By.NAME, 'nombre').send_keys(tipo)
-            context.driver.find_element(By.NAME, 'descripcion').send_keys(
-                f"Descripción de {tipo}")
-            select_resp = context.driver.find_element(By.NAME, 'responsable')
-            Select(select_resp).select_by_value('1')
-            context.driver.find_element(
-                By.XPATH, "//button[@type='submit']").click()
-            time.sleep(2)
-
+        # Volver a la página de crear formulario e intentar seleccionar
         context.driver.get(f"{context.url}/tipo-solicitud/formularios/crear/")
         time.sleep(1)
         select_element = context.driver.find_element(By.NAME, 'tipo_solicitud')
         select = Select(select_element)
         select.select_by_visible_text(tipo)
-
-    time.sleep(0.5)
+        time.sleep(0.5)
 
 
 @when(u'no selecciono ningún tipo de solicitud')
@@ -157,25 +159,33 @@ def step_impl(context, campo):
 
 @when(u'presiono el botón "Crear Formulario"')
 def step_impl(context):
+    wait = WebDriverWait(context.driver, 10)
     try:
-        crear_btn = context.driver.find_element(
-            By.XPATH, "//button[contains(text(), 'Crear Formulario')]")
+        crear_btn = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[contains(text(), 'Crear Formulario')]")))
     except:
-        crear_btn = context.driver.find_element(
-            By.XPATH, "//button[@type='submit']")
-    crear_btn.click()
+        crear_btn = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[@type='submit']")))
+    context.driver.execute_script(
+        "arguments[0].scrollIntoView({block: 'center'});", crear_btn)
+    time.sleep(0.5)
+    context.driver.execute_script("arguments[0].click();", crear_btn)
     time.sleep(2)
 
 
 @when(u'presiono el botón de cancelar en formulario')
 def step_impl(context):
+    wait = WebDriverWait(context.driver, 10)
     try:
-        cancelar_btn = context.driver.find_element(
-            By.XPATH, "//a[contains(@class, 'btn-secondary') and contains(text(), 'Cancelar')]")
+        cancelar_btn = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//a[contains(@class, 'btn-secondary') and contains(text(), 'Cancelar')]")))
     except:
-        cancelar_btn = context.driver.find_element(
-            By.XPATH, "//a[contains(@href, 'formularios')]")
-    cancelar_btn.click()
+        cancelar_btn = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//a[contains(@href, 'formularios')]")))
+    context.driver.execute_script(
+        "arguments[0].scrollIntoView({block: 'center'});", cancelar_btn)
+    time.sleep(0.5)
+    context.driver.execute_script("arguments[0].click();", cancelar_btn)
     time.sleep(1)
 
 
@@ -241,13 +251,17 @@ def step_impl(context, campo):
 
 @when(u'presiono el botón "Guardar Cambios"')
 def step_impl(context):
+    wait = WebDriverWait(context.driver, 10)
     try:
-        guardar_btn = context.driver.find_element(
-            By.XPATH, "//button[contains(text(), 'Guardar Cambios')]")
+        guardar_btn = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[contains(text(), 'Guardar Cambios')]")))
     except:
-        guardar_btn = context.driver.find_element(
-            By.XPATH, "//button[@type='submit']")
-    guardar_btn.click()
+        guardar_btn = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[@type='submit']")))
+    context.driver.execute_script(
+        "arguments[0].scrollIntoView({block: 'center'});", guardar_btn)
+    time.sleep(0.5)
+    context.driver.execute_script("arguments[0].click();", guardar_btn)
     time.sleep(2)
 
 
@@ -311,7 +325,7 @@ def step_impl(context):
         error_elements = context.driver.find_elements(
             By.CLASS_NAME, 'errorlist')
         assert len(error_elements) > 0, "No se encontró mensaje de error"
-    except:
+    except BaseException:
         pass
     time.sleep(1)
 
@@ -339,7 +353,7 @@ def step_impl(context):
         error_elements = context.driver.find_elements(
             By.CLASS_NAME, 'errorlist')
         assert len(error_elements) > 0, "No se encontró mensaje de error"
-    except:
+    except BaseException:
         pass
     time.sleep(1)
 
@@ -362,7 +376,7 @@ def step_impl(context, nombre):
 @then(u'soy redirigido a la página de configurar campos')
 def step_impl(context):
     # Verificar que la URL contiene la ruta de campos
-    assert '/tipo-solicitud/formularios/campos/' in context.driver.current_url, \
+    assert '/formulario/' in context.driver.current_url and '/campos/' in context.driver.current_url, \
         f"No se redirigió a la página de campos. URL actual: {context.driver.current_url}"
     time.sleep(1)
 
@@ -373,7 +387,7 @@ def step_impl(context, nombre):
     try:
         h1_element = context.driver.find_element(By.TAG_NAME, 'h1')
         titulo = h1_element.text
-    except:
+    except BaseException:
         titulo = context.driver.find_element(By.XPATH, "//h1 | //h2").text
 
     assert 'Configurar campos' in titulo or nombre in titulo, \

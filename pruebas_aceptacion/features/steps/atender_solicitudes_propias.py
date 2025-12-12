@@ -7,19 +7,19 @@ BASE_URL = "http://localhost:8000/solicitudes/listar"
 
 
 @given("que estoy en la página de listado de solicitudes")
-def step_impl(context):
+def step_en_pagina_listado(context):
     context.driver.get(BASE_URL)
     time.sleep(1)
 
 
 @given("estoy en la página de listado de solicitudes")
-def step_impl(context):
+def step_estoy_en_pagina_listado(context):
     context.driver.get("http://localhost:8000/solicitudes/listar/")
     time.sleep(1)
 
 
 @then("debo ver una tabla con al menos una solicitud")
-def step_impl(context):
+def step_ver_tabla_solicitudes(context):
     filas = context.driver.find_elements(By.CSS_SELECTOR, "table tbody tr")
 
     assert len(filas) >= 1, \
@@ -29,7 +29,7 @@ def step_impl(context):
 
 
 @then(u'solo veo las solicitudes en estado "Cancelada"')
-def step_impl(context):
+def step_ver_solicitudes_canceladas(context):
     filas = context.driver.find_elements(
         By.CSS_SELECTOR, "#solicitudesTable tbody tr")
     assert filas, "No se encontraron filas en la tabla de solicitudes."
@@ -44,7 +44,7 @@ def step_impl(context):
 
 
 @when('hago clic en el botón "Atender" de la primera solicitud')
-def step_impl(context):
+def step_clic_boton_atender(context):
     try:
         boton = context.driver.find_element(
             By.CSS_SELECTOR, "a.btn, a[href*='atender']"
@@ -56,14 +56,14 @@ def step_impl(context):
 
 
 @when('aplico filtro por estado "Cancelada"')
-def step_impl(context):
+def step_filtrar_cancelada(context):
     boton = context.driver.find_element(By.ID, "btn-cancelada")
     boton.click()
     time.sleep(1)
 
 
 @when('escribo "{folio}" en el buscador de folios')
-def step_impl(context, folio):
+def step_escribir_folio(context, folio):
     search_input = context.driver.find_element(By.ID, "search")
     search_input.clear()
     search_input.send_keys(folio)
@@ -74,7 +74,7 @@ def step_impl(context, folio):
 
 
 @then("debo ver el detalle de la solicitud")
-def step_impl(context):
+def step_ver_detalle_solicitud(context):
     body = context.driver.find_element(By.TAG_NAME, "body").text
 
     assert "Detalles de la Solicitud" in body, \
@@ -84,7 +84,7 @@ def step_impl(context):
 
 
 @then("debo ver un historial de seguimiento con al menos un registro")
-def step_impl(context):
+def step_ver_historial_seguimiento(context):
     filas = context.driver.find_elements(By.CSS_SELECTOR, "table tbody tr")
 
     assert len(filas) >= 1, \
@@ -94,7 +94,7 @@ def step_impl(context):
 
 
 @then('debo ver en la tabla una fila con el folio "{folio}"')
-def step_impl(context, folio):
+def step_ver_fila_folio(context, folio):
     filas = context.driver.find_elements(
         By.CSS_SELECTOR, "#solicitudesTable tbody tr")
     assert len(filas) > 0, "No se encontraron filas en la tabla después de buscar."
@@ -109,4 +109,6 @@ def step_impl(context, folio):
             encontrado = True
             break
 
-    assert encontrado, f'No se encontró una fila con el folio "{folio}" en los resultados de búsqueda.'
+    assert encontrado, (
+        f'No se encontró una fila con el folio "{folio}" en los resultados de búsqueda.'
+    )
